@@ -88,7 +88,7 @@ done < $1
 #exploit
 while read domain; do
 cat myrecon/Content-Discovrey/vuln-params/$domain-xss.txt |  kxss | anew myrecon/Content-Discovrey/vuln/$domain-xss.txt
-cat myrecon/Content-Discovrey/params/$domain-params.txt |dalfox pipe --custom-payload xss.txt > myrecon/Content-Discovrey/vuln-param>
-cat  myrecon/Content-Discovrey/vuln-params/$domain-ssrf.txt | qsreplace  https://www.google.com| anew myrecon/Content-Discovrey/vuln>
+cat myrecon/Content-Discovrey/vuln-params/$domain-xss.txt |dalfox pipe --custom-payload xss.txt > myrecon/Content-Discovrey/vuln/$domain-dalfox.txt
+cat  myrecon/Content-Discovrey/vuln-params/$domain-ssrf.txt | qsreplace  https://www.google.com| anew myrecon/Content-Discovrey/vuln/$domain.txt
 done < $1
 
