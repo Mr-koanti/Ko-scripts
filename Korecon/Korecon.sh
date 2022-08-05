@@ -14,13 +14,25 @@ echo "This Tool is Created by Mr.koanti"
 #httpx ==> go install -v github.com/projectdiscovery/httpx/cmd/httpx@latest
 #Sub-Dril===> https://github.com/Mr-koanti/Ko-scripts/blob/main/metho/Sub-Drill.sh
 mkdir -p myrecon/{subdomain,takeover,alive/scode,Nuclei-scan,Port_scan,Content-Discovrey/{allcontent,params,vuln,jsfile,vuln-params}}
-while read domain; do 
-curl -s https://crt.sh/\?q=%25.$domain\&output\=json | jq -r '.[].name_value' | sed 's/\*\.//g' | sort -u |anew myrecon/subdomain/$domain.txt | httprobe -c 50 | anew myrecon/alive/$domain-livsub.txt;
-
+#subdomain enmuration:
+while read domain; do
+echo "passive subdoomain enum";
 #you must download Sub-Drill.sh and add  chmod +x its dir bellow
-amass enum -passive -d $domain | sort -u  | anew myrecon/subdomain/$domain.txt
-'./Sub-Drill.sh' $domain | sort -u  | anew myrecon/subdomain/$domain.txt ;
-cat myrecon/subdomain/$domain.txt |httpx -sc -cl -title -td -fr -server -ports 80,8080,8448,433,21,445,3306,1433,3389,22   | anew myrecon/alive/scode/$domain-statecode.txt | cut -d "[" -f 1 | anew myrecon/alive/$domain-livsub.txt ;
+subfinder -d $domain  | anew myrecon/subdomain/$domain.txt
+chaos -d  $domain | anew myrecon/subdomain/$domain.txt
+amass enum -passive -d $domain   | anew myrecon/subdomain/$domain.txt
+'./Sub-Drill.sh' $domain | anew myrecon/subdomain/$domain.txt ;
+
+echo "ips recon"
+#ips recon
+shodan search --fields ip_str   ssl:"$domain"  | anew  myrecon/subdomain/$domain-ips.txt
+shodan search --fields port   ssl:"$domain" | sort -u | tr "\n" ","| anew myrecon/subdomain/$domain-ports.txt
+#passive sub enum
+echo "subdomain brute force "
+amass enum -active -d $domain -brute -w subdomains-10000.txt -o  myrecon/subdomain/$domain.txt;
+echo "live subdoamins"
+cat myrecon/subdomain/$domain-ips.txt | httpx -sc -cl -title -td -fr -server -ports 80,81,443,591,2082,2087,2095,2096,3000,8000,8001,8008,8080,8083,8443,8834,8888   | anew myrecon/alive/scode/$domain-ip-state.txt | cut -d "[" -f 1 | anew myrecon/alive/$domain-live-ip.txt 
+cat myrecon/subdomain/$domain.txt |httpx -sc -cl -title -td -fr -server -ports 80,81,443,591,2082,2087,2095,2096,3000,8000,8001,8008,8080,8083,8443,8834,8888    | anew myrecon/alive/scode/$domain-statecode.txt | cut -d "[" -f 1 | anew myrecon/alive/$domain-livsub.txt
 #=====================================================================================================================================================\\
 #=====================================================================================================================================================\\
 done < $1
@@ -38,7 +50,7 @@ echo "
 
 
 while read domain; do
-SubOver  -l myrecon/subdomain/$domain.txt -v | anew myrecon/takeover/$domain.txt
+SubOver  -l myrecon/subdomain/$domain.txt -v -a | tee myrecon/takeover/$domain.txt
 done < $1
 
 #=========================================================================================================================================================\\
@@ -52,12 +64,13 @@ echo "
 ╚═╝      ╚═════╝ ╚═╝  ╚═╝   ╚═╝       ╚══════╝ ╚═════╝╚═╝  ╚═╝╚═╝  ╚═══╝                                                                        
 " 
 while read domain; do
-nmap -iL myrecon/subdomain/$domain.txt --script vuln | anew myrecon/Port_scan/$domain.txt
+smap -iL myrecon/subdomain/$domain.txt -sV | anew myrecon/Port_scan/$domain.txt
 done < $1
 #nuclie scan
 
 while read domain; do
-nuclei -l myrecon/alive/$domain-livsub.txt | anew myrecon/Nuclei-scan/$domain.txt
+nuclei -l myrecon/alive/$domain-livsub.txt -es info | anew myrecon/Nuclei-scan/$domain.txt
+nuclei -l myrecon/alive/$domain-live-ip.txt -es info | anew myrecon/Nuclei-scan/$domain.txt
 done < $1
 
 
@@ -73,22 +86,18 @@ echo "
                                                                                    |___/ 
 "
 while read domain; do
-cat myrecon/subdomain/$domain.txt | gau --subs  | anew myrecon/Content-Discovrey/allcontent/$domain.txt
-cat myrecon/Content-Discovrey/allcontent/$domain.txt |  uro | anew myrecon/Content-Discovrey/params/$domain-params.txt;
-gospider -S alive/$domain-livsub.txt  -c 10 -d 1 | anew myrecon/Content-Discovrey/$domain-allurl.txt
+cat  myrecon/subdomain/$domain.txt | gauplus -b png,jpg,jpeg,css,svf,gif  | anew myrecon/Content-Discovrey/allcontent/$domain.txt;
+cat  myrecon/Content-Discovrey/allcontent/$domain.txt |  grep "="  | qsreplace -a | anew myrecon/Content-Discovrey/params/$domain-params.txt;
 cat  myrecon/Content-Discovrey/params/$domain-params.txt  | gf xss      | anew myrecon/Content-Discovrey/vuln-params/$domain-xss.txt
 cat  myrecon/Content-Discovrey/params/$domain-params.txt  | gf ssrf     | anew myrecon/Content-Discovrey/vuln-params/$domain-ssrf.txt
 cat  myrecon/Content-Discovrey/params/$domain-params.txt  | gf sqli     | anew myrecon/Content-Discovrey/vuln-params/$domain-sqli.txt
 cat  myrecon/Content-Discovrey/params/$domain-params.txt  | gf redirect | anew myrecon/Content-Discovrey/vuln-params/$domain-openred.txt
 cat  myrecon/Content-Discovrey/params/$domain-params.txt  | gf rce      | anew myrecon/Content-Discovrey/vuln-params/$domain-rce.txt
 cat  myrecon/Content-Discovrey/params/$domain-params.txt  | gf idor     | anew myrecon/Content-Discovrey/vuln-params/$domain-idor.txt
-
-gospider -S myreacon/alive/$domain-livsub.txt  -c 10 -d 1 |anew myrecon/Content-Discovrey/jsfile/$domain.txt
 done < $1
 #exploit
 while read domain; do
 cat myrecon/Content-Discovrey/vuln-params/$domain-xss.txt |  kxss | anew myrecon/Content-Discovrey/vuln/$domain-xss.txt
-cat myrecon/Content-Discovrey/vuln-params/$domain-xss.txt |dalfox pipe --custom-payload xss.txt > myrecon/Content-Discovrey/vuln/$domain-dalfox.txt
-cat  myrecon/Content-Discovrey/vuln-params/$domain-ssrf.txt | qsreplace  https://www.google.com| anew myrecon/Content-Discovrey/vuln/$domain.txt
+cat  myrecon/Content-Discovrey/vuln-params/$domain-openred.txt| cut -f 3- -d ':' | qsreplace "https://evil.com" | httpx -silent -status-code -location | anew myrecon/Content-Discovrey/vuln/$domain-openred.txt
 done < $1
 
