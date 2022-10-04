@@ -25,8 +25,7 @@ amass enum -passive -d $domain   | anew myrecon/subdomain/$domain.txt
 
 echo "ips recon"
 #ips recon
-shodan search --fields ip_str   ssl:"$domain"  | anew  myrecon/subdomain/$domain-ips.txt
-shodan search --fields port   ssl:"$domain" | sort -u | tr "\n" ","| anew myrecon/subdomain/$domain-ports.txt
+shodan search --fields ip_str,port --separator :  ssl:"$domain"  | anew  myrecon/subdomain/$domain-ips.txt
 #passive sub enum
 echo "subdomain brute force "
 amass enum -active -d $domain -brute -w subdomains-10000.txt -o  myrecon/subdomain/$domain.txt;
@@ -100,4 +99,6 @@ while read domain; do
 cat myrecon/Content-Discovrey/vuln-params/$domain-xss.txt |  kxss | anew myrecon/Content-Discovrey/vuln/$domain-xss.txt
 cat  myrecon/Content-Discovrey/vuln-params/$domain-openred.txt| cut -f 3- -d ':' | qsreplace "https://evil.com" | httpx -silent -status-code -location | anew myrecon/Content-Discovrey/vuln/$domain-openred.txt
 done < $1
+cp -r myrecon $1 ;
+rm -r myrecon/ ;
 
