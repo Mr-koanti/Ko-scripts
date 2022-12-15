@@ -92,36 +92,79 @@ cat  myrecon/Content-Discovrey/params/$domain-params.txt  | gf sqli     | anew m
 cat  myrecon/Content-Discovrey/params/$domain-params.txt  | gf redirect | anew myrecon/Content-Discovrey/vuln-params/$domain-openred.txt
 done < $1
 #xss scan
+echo '                
+ __  _____ ___  
+ \ \/ / __/ __| 
+  >  <\__ \__ \ 
+ /_/\_\___/___/ 
+                '
 while read domain; do
 cat myrecon/Content-Discovrey/vuln-params/$domain-xss.txt |  kxss | anew myrecon/Content-Discovrey/vuln/$domain-kxss.txt 
 done < $1
 #open-redirect
+echo "open-redirect#========================================================================================================================================================="
+
 while read domain; do
 cat  myrecon/Content-Discovrey/vuln-params/$domain-openred.txt| cut -f 3- -d ':' | qsreplace "https://evil.com" | httpx  -status-code -location  -fr | anew myrecon/Content-Discovrey/vuln/$domain-openred.txt
 cat myrecon/subdomain/$domain.txt | httpx -status-code -location  -fr -path /evil.com,///evil.com,////evil.com | anew myrecon/Content-Discovrey/vuln/$domain-openred-root.txt
 done < $1
 #information Disclosure
+echo "
+  _        __         ____  _          _                          
+ (_)_ __  / _| ___   |  _ \(_)___  ___| | ___  ___ _   _ _ __ ___ 
+ | | '_ \| |_ / _ \  | | | | / __|/ __| |/ _ \/ __| | | | '__/ _ \
+ | | | | |  _| (_) | | |_| | \__ \ (__| | (_) \__ \ |_| | | |  __/
+ |_|_| |_|_|  \___/  |____/|_|___/\___|_|\___/|___/\__,_|_|  \___|
+                                                                  
+"
 while read domain; do
 cat myrecon/Content-Discovrey/jsfile/$domain-js.txt | httpx -mc 200 |nuclei -t ~/nuclei-templates/exposures/ | anew anew myrecon/Content-Discovrey/vuln/$domain-disclousre.txt
 done < $1
 #ssrf 
+echo "
+                __ 
+  ___ ___ _ __ / _|
+ / __/ __| '__| |_ 
+ \__ \__ \ |  |  _|
+ |___/___/_|  |_|  
+                   
+"
 ssrftoken=1brzkl83d6vjn3herkeymon07.canarytokens.com
 while read domain; do
 cat  myrecon/Content-Discovrey/vuln-params/$domain-ssrf.txt| cut -f 3- -d ':' | qsreplace $ssrftoken | httpx  -status-code -location  -fr | anew myrecon/Content-Discovrey/vuln/$domain-ssrf.txt
 done < $1
 #http-smuggling
+echo "                            
+  ___ _ __ ___  _   _  __ _ 
+ / __| '_ ` _ \| | | |/ _` |
+ \__ \ | | | | | |_| | (_| |
+ |___/_| |_| |_|\__,_|\__, |
+                      |___/ "
 while read domain; do
 nuclei -l myrecon/alive/$domain-livsub.txt -tags smuggling | anew myrecon/Content-Discovrey/vuln/$domain-smuggling.txt
 done < $1
 #crlf 
+echo "            _  __ 
+   ___ _ __| |/ _|
+  / __| '__| | |_ 
+ | (__| |  | |  _|
+  \___|_|  |_|_|  
+                  "
 while read domain; do
 nuclei -l myrecon/alive/$domain-livsub.txt -tags crlf | anew myrecon/Content-Discovrey/vuln/$domain-crlf.txt
 done < $1
 # cache-poisoning  
+echo "cache-poisoning"
 while read domain; do
 nuclei -l myrecon/alive/$domain-livsub.txt -id cache-poisoning  | anew myrecon/Content-Discovrey/vuln/$domain-cache-poisoning.txt
 done < $1
 #cve_scan
+echo "                 
+   _____   _____ 
+  / __\ \ / / _ \
+ | (__ \ V /  __/
+  \___| \_/ \___|
+                 "
 while read domain; do
 nuclei -l myrecon/alive/$domain-livsub.txt -tags cve | anew myrecon/Nuclei-scan/$domain-cve.txt
 nuclei -l myrecon/alive/$domain-live-ip.txt -tags cve | anew myrecon/Nuclei-scan/$domain-cve-ip.txt
