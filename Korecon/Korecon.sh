@@ -33,8 +33,8 @@ done <$1
 echo "Subdomain Brute Force______________________________________________________________________________________________________________________________________________________"
 while read domain; do
 echo "subdomain brute force "
-amass enum -active -d $domain -brute -w subdomains-10000.txt -o  myrecon/subdomain/$domain-b.txt;
-cat  myrecon/subdomain/$domain-b.txt | anew myrecon/subdomain/$domain.txt
+gobuster dns -d $domain -w subdomains-10000.txt  -t 70 --wildcard -o   myrecon/subdomain/$domain-b.txt;
+cat  myrecon/subdomain/$domain-b.txt | cut -d ":" -f 2 |anew myrecon/subdomain/$domain.txt
 rm myrecon/subdomain/$domain-b.txt 
 done < $1
 #Live Subdomain:
