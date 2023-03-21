@@ -33,7 +33,7 @@ done <$1
 echo "Subdomain Brute Force______________________________________________________________________________________________________________________________________________________"
 while read domain; do
 echo "subdomain brute force "
-gobuster dns -d $domain -w subdomains-10000.txt  -t 70 --wildcard -o   myrecon/subdomain/$domain-b.txt;
+gobuster dns -d $domain -w subdomain-19k.txt  -t 70 --wildcard -o   myrecon/subdomain/$domain-b.txt;
 cat  myrecon/subdomain/$domain-b.txt | cut -d ":" -f 2 |anew myrecon/subdomain/$domain.txt
 rm myrecon/subdomain/$domain-b.txt 
 done < $1
@@ -133,39 +133,8 @@ ssrftoken=1brzkl83d6vjn3herkeymon07.canarytokens.com
 while read domain; do
 cat  myrecon/Content-Discovrey/vuln-params/$domain-ssrf.txt| cut -f 3- -d ':' | qsreplace $ssrftoken | httpx  -status-code -location  -fr | anew myrecon/Content-Discovrey/vuln/$domain-ssrf.txt
 done < $1
-#http-smuggling
-echo "                            
-  ___ _ __ ___  _   _  __ _ 
- / __| '_ ` _ \| | | |/ _` |
- \__ \ | | | | | |_| | (_| |
- |___/_| |_| |_|\__,_|\__, |
-                      |___/ "
+echo "Nuclie-Scan"
 while read domain; do
-nuclei -l myrecon/alive/$domain-livsub.txt -tags smuggling | anew myrecon/Content-Discovrey/vuln/$domain-smuggling.txt
+nuclei -l myrecon/alive/$domain-livsub.txt -es info,unknown | anew myrecon/Content-Discovrey/vuln/$domain-cache-poisoning.txt
 done < $1
-#crlf 
-echo "            _  __ 
-   ___ _ __| |/ _|
-  / __| '__| | |_ 
- | (__| |  | |  _|
-  \___|_|  |_|_|  
-                  "
-while read domain; do
-nuclei -l myrecon/alive/$domain-livsub.txt -tags crlf | anew myrecon/Content-Discovrey/vuln/$domain-crlf.txt
-done < $1
-# cache-poisoning  
-echo "cache-poisoning"
-while read domain; do
-nuclei -l myrecon/alive/$domain-livsub.txt -id cache-poisoning  | anew myrecon/Content-Discovrey/vuln/$domain-cache-poisoning.txt
-done < $1
-#cve_scan
-echo "                 
-   _____   _____ 
-  / __\ \ / / _ \
- | (__ \ V /  __/
-  \___| \_/ \___|
-                 "
-while read domain; do
-nuclei -l myrecon/alive/$domain-livsub.txt -tags cve | anew myrecon/Nuclei-scan/$domain-cve.txt
-nuclei -l myrecon/alive/$domain-live-ip.txt -tags cve | anew myrecon/Nuclei-scan/$domain-cve-ip.txt
-done < $1
+
